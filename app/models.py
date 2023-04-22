@@ -50,11 +50,15 @@ class Product(models.Model):
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    Product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return str(self.id)
+
+    @property
+    def total_cost(self):
+        return self.quantity * self.product.discounted_price
 
 
 STATUS_CHOICES = (
@@ -73,3 +77,7 @@ class OrderPlaced(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     ordered_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="Pending")
+
+    @property
+    def total_cost(self):
+        return self.quantity * self.product.discounted_price

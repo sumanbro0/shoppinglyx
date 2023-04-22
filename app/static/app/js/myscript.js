@@ -21,3 +21,57 @@ $('#slider1, #slider2, #slider3').owlCarousel({
         }
     }
 })
+
+$('.plus-cart').click(function () {
+    var id = $(this).attr("pid").toString();
+    var elm = this.parentNode.children[2];
+    $.ajax({
+        type: "GET",
+        url: "/pluscart",
+        data: {
+            prod_id: id,
+        },
+        success: function (data) {
+            elm.innerText = data.quantity;
+            $('#amount').text(data.amount);
+            $('#totalamount').text(data.total_amount);
+
+        },
+
+    })
+})
+$('.minus-cart').click(function () {
+    var id = $(this).attr("pid").toString();
+    var elm = this.parentNode.children[2];
+    $.ajax({
+        type: "GET",
+        url: "/minuscart",
+        data: {
+            prod_id: id,
+        },
+        success: function (data) {
+            elm.innerText = data.quantity;
+            $('#amount').text(data.amount);
+            $('#totalamount').text(data.total_amount);
+        },
+
+    })
+})
+$('.remove-cart').click(function () {
+    var id = $(this).attr("pid").toString();
+    var elm = this
+
+    $.ajax({
+        type: "GET",
+        url: "/removecart",
+        data: {
+            prod_id: id,
+        },
+        success: function (data) {
+            $('#amount').text(data.amount);
+            $('#totalamount').text(data.total_amount);
+            elm.parentNode.parentNode.parentNode.parentNode.remove();
+        },
+
+    })
+})
