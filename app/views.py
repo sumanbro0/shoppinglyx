@@ -140,7 +140,8 @@ def address(request):
 
 def orders(request):
     op = OrderPlaced.objects.filter(user=request.user)
-    return render(request, "app/orders.html", {"op": op})
+    c = op.count()
+    return render(request, "app/orders.html", {"op": op, "count": c})
 
 
 def login(request):

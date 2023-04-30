@@ -18,52 +18,20 @@
                     <img src="{{o.product.product_image.url}}" alt="" class="img-fluid" height="150" width="150">
                 </div>
                 <div class="col-sm-7">
+                    <input type="hidden" name="user" id="user" class="user" value="{{request.user.id}}">
                     <p>Product: {{o.product.title}}</p>
                     <p>Quantity: {{o.quantity}}</p>
                     <p>Price: {{o.total_cost}}</p>
                 </div>
                 <div class="col-sm-3 fw-bold">
-                    <p>Order Status:{{o.status}}</p>
-                    {% if o.status == 'Accepted' %}
+                    <input type="hidden" name="oid" class="oid{{forloop.counter0}}" value="{{o.id}}">
+                    <span>Status:</span>
+                    <span class="status{{forloop.counter}}"></span>
                     <div class="progress">
                         <div style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"
-                            role="progressbar" class="progress-bar">
-
+                            role="progressbar" class="progress-bar bar{{forloop.counter}}">
                         </div>
                     </div>
-                    {% endif %}
-                    {% if o.status == "Packed" %}
-                    <div class="progress">
-                        <div style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"
-                            role="progressbar" class="progress-bar bg-info">
-
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if o.status == "On The Way" %}
-                    <div class="progress">
-                        <div style="width: 70%;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"
-                            role="progressbar" class="progress-bar bg-warning">
-
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if o.status == "Delivered" %}
-                    <div class="progress">
-                        <div style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-                            role="progressbar" class="progress-bar bg-success">
-
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if o.status == "Cancel" %}
-                    <div class="progress">
-                        <div style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"
-                            role="progressbar" class="progress-bar">
-
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -72,3 +40,65 @@
     </div>
 </div>
 {% endblock main-content %}
+{% block script %}
+
+<script>
+    let c = `{{count}}`
+    function increaseProgress(data) {
+
+        if (Array.isArray(data)) {
+            data.forEach(function (e, index) {
+                let oid = $(`.oid${index}`).val()
+                if (oid == e.oid) {
+                    var progressHtml = document.querySelector(`.bar${index + 1}`)
+                    var statusHtml = document.querySelector(`.status${index + 1}`)
+                    statusHtml.innerHTML = e.status
+                    progressHtml.style.width = e.prog + '%'
+
+                    if (e.prog == 50) {
+                        progressHtml.classList.add('bg-info')
+                    }
+                    else if (e.prog == 75) {
+                        progressHtml.classList.add('bg-warning')
+                    }
+                    else if (e.prog == 100) {
+                        progressHtml.classList.add('bg-success')
+                    }
+                }
+            });
+        } else {
+            for (let i = 0; i < c; i++) {
+                let oid = $(`.oid${i}`).val()
+                if (oid == data.oid) {
+                    var progressHtml = document.querySelector(`.bar${i + 1}`)
+                    var statusHtml = document.querySelector(`.status${i + 1}`)
+                    statusHtml.innerHTML = data.status
+                    progressHtml.style.width = data.prog + '%'
+                    if (data.prog == 50) {
+                        progressHtml.classList.add('bg-info')
+                    }
+                    else if (data.prog == 75) {
+                        progressHtml.classList.add('bg-warning')
+                    }
+                    else if (data.prog == 100) {
+                        progressHtml.classList.add('bg-success')
+                    }
+                }
+            }
+        }
+    }
+    let user = $('#user').val()
+
+    let socket = new WebSocket('ws://' + window.location.host + '/ws/order/' + user)
+    socket.onopen = function (e) {
+        console.log('connected')
+    }
+    socket.onclose = function (e) {
+        console.log('hello close')
+    }
+    socket.onmessage = function (e) {
+        var data = JSON.parse(e.data)
+        increaseProgress(data.payload);
+    }
+</script>
+{% endblock script %}

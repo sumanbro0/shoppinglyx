@@ -1,6 +1,10 @@
+import json
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator
+from django.db.models.signals import post_save
+from channels.layers import get_channel_layer
+from django.dispatch import receiver
+from asgiref.sync import async_to_sync
 
 # Create your models here.
 
@@ -81,3 +85,47 @@ class OrderPlaced(models.Model):
     @property
     def total_cost(self):
         return self.quantity * self.product.discounted_price
+
+    @staticmethod
+    def send_status(uid):
+        ins = OrderPlaced.objects.filter(user=uid)
+        obj = []
+        for instance in ins:
+            data = {}
+            data["status"] = instance.status
+            data["oid"] = instance.id
+            prog = 0
+            if instance.status == "Accepted":
+                prog = 25
+            elif instance.status == "Packed":
+                prog = 50
+            elif instance.status == "On The Way":
+                prog = 75
+            elif instance.status == "Delivered":
+                prog = 100
+            data["prog"] = prog
+            obj.append(data)
+        return obj
+
+
+@receiver(post_save, sender=OrderPlaced)
+def order_status_handler(sender, instance, created, **kwargs):
+    if not created:
+        channel_layer = get_channel_layer()
+        data = {}
+        data["status"] = instance.status
+        data["oid"] = instance.id
+        prog = 0
+        if instance.status == "Accepted":
+            prog = 25
+        elif instance.status == "Packed":
+            prog = 50
+        elif instance.status == "On The Way":
+            prog = 75
+        elif instance.status == "Delivered":
+            prog = 100
+        data["prog"] = prog
+        async_to_sync(channel_layer.group_send)(
+            "order_%s" % instance.user.id,
+            {"type": "order_status", "value": json.dumps(data)},
+        )
