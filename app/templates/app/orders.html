@@ -74,13 +74,21 @@
                     var statusHtml = document.querySelector(`.status${i + 1}`)
                     statusHtml.innerHTML = data.status
                     progressHtml.style.width = data.prog + '%'
+                    if (data.prog == 25) {
+                        progressHtml.classList.remove('bg-warning', 'bg-success', 'bg-info')
+                    }
                     if (data.prog == 50) {
+                        progressHtml.classList.remove('bg-warning', 'bg-success')
                         progressHtml.classList.add('bg-info')
+
                     }
                     else if (data.prog == 75) {
+
+                        progressHtml.classList.remove('bg-info', 'bg-success')
                         progressHtml.classList.add('bg-warning')
                     }
                     else if (data.prog == 100) {
+                        progressHtml.classList.remove('bg-warning', 'bg-info')
                         progressHtml.classList.add('bg-success')
                     }
                 }
